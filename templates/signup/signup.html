@@ -1,0 +1,29 @@
+{% extends "signup/base.html" %}
+{% block content %}
+    <main class="cotainer d-flex justify-content-center ">
+        <img class="signup-form-image" src="/static/signup/abstract.jpg" alt="">
+        <div class="card justify-content-center signup-form-div">
+            <form onsubmit="signup()" method="POST"  class="mt-4 p-5">
+                <h1 class="text-center">Sign up</h1>
+
+                <label class="text-start mt-4">Name:</label>
+                <input class="form-control " type="text" id="username" name="username" required value="{{ form.username }}">
+                <p class="text text-danger">{{ form.username_error }}</p>
+
+                <label class="text-start mt-4">Email:</label>
+                <input class="form-control " type="email" id="email" required name="email" value="{{ form.email }}">
+
+                <label class="text-start mt-4">Password:</label>
+                <input class="form-control " type="password" required id="password" name="password" value="">
+
+                <div class="text-start text-danger" style="list-style: none;">
+                </div>
+
+                <div class="text-center w-100">
+                    <button type="submit" class="btn btn-primary m-auto mt-4 p-2">Submit</button>
+                </div>
+                <p class="text-center mt-2">Already have an account? <a href="/login">Log in</a></p>
+            </form>
+        </div>
+    </main>
+{% endblock %}

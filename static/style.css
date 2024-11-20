@@ -1,0 +1,38 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #eaeaea;
+  color: #333;
+}
+
+/* Style the scrollbar track */
+::-webkit-scrollbar {
+  width: 8px;              /* Height of the horizontal scrollbar */
+  height: 12px;            /* Width of the horizontal scrollbar */
+}
+
+/* Style the scrollbar track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;      /* Color of the scrollbar track */
+}
+
+/* Style the scrollbar handle (thumb) */
+::-webkit-scrollbar-thumb {
+  background: #888;         /* Color of the scrollbar handle */
+  border-radius: 10px;      /* Rounded corners */
+}
+
+/* Change the scrollbar handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;         /* Darker color when hovered */
+}
+
+/* Scrollbar corner (optional for when both scrollbars appear) */
+::-webkit-scrollbar-corner {
+  background-color: #f1f1f1; /* Match the track color */
+}
