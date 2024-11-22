@@ -1,8 +1,9 @@
-from sqlalchemy import or_, select
+from datetime import datetime
+
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session
 
 from models.chat.chat import PrivateChat, PrivateMessage
-
 
 class Repository:
     def __init__(self, db: Session):
@@ -15,7 +16,12 @@ class Repository:
         self.db.add(cv)
         self.db.commit()
 
-    def select_user_chats(self, username: str):
+    def create_message(self, pm: PrivateMessage) -> int:
+        self.db.add(pm)
+        self.db.commit()
+        return pm.id
+
+    def select_user_chats(self, username: str) -> list[PrivateChat]:
         stmt = select(PrivateChat).where(
             or_(
                 PrivateChat.userone == username,
@@ -30,10 +36,23 @@ class Repository:
 
         return chats
 
-    def create_message(self, sender: str, target: str, message: str):
-        pm = PrivateMessage()
-        pm.user = sender
-        pm.target = target
-        pm.data = message
-        self.db.add(pm)
-        self.db.commit()
+    def select_chat_messages(self, userone: str, usertwo: str) -> list[PrivateMessage]:
+        stmt = select(PrivateMessage).where(
+            or_(
+                PrivateMessage.sender == userone and PrivateMessage.target == usertwo ,
+                PrivateMessage.target == usertwo and PrivateMessage.sender == userone,
+            )
+        )
+
+        result = self.db.execute(stmt)
+
+        messages: list[PrivateMessage] = []
+        for obj in result.scalars():
+            obj.time = obj.time.strftime('%H:%M')
+            messages.append(obj)
+
+        return messages
+
+    def update_read(self, id: int, read: bool) -> None:
+        stmt = update(PrivateMessage).where(PrivateMessage.id == id).values(read=read)
+        self.db.execute(stmt)

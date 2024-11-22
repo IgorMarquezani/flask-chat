@@ -1,3 +1,6 @@
+let activeChat
+let chat = 0
+
 const startChat = (userone) => {
     let usertwo = document.getElementById("start-chat-modal-input").value
     let err = document.getElementById("start-chat-error")
@@ -39,14 +42,16 @@ const startChat = (userone) => {
     })
 }
 
-let chat = 0
-
 const createWebsocket = (target) => {
+    if (chat) {
+        chat.close(1000, "connection closed")
+    }
+
     chat = new WebSocket('ws://' + window.location.host + `/websocket/create?target=${target}`);
-    //chat = new WebSocket('ws://' + window.location.host + `/echo`);
     console.log("starting websocket")
 
     const chatBox = document.getElementById("chat-box")
+    chatBox.scrollTo(0, chatBox.scrollHeight)
 
     chat.onmessage = (e) => {
         const now = new Date()
@@ -57,10 +62,25 @@ const createWebsocket = (target) => {
                         <small class="text-muted">${now.getHours()}</small>
         `
         chatBox.append(div)
-        console.log(e.data)
+        chatBox.scrollTo(0, chatBox.scrollHeight)
     };
 
     chat.onclose = (e)  => {
         console.error(`Chat socket closed. Status ${e.code}. Message: ${e.reason}`);
     };
+}
+
+const changeMainChat = (target) => {
+    if (activeChat === target) {
+        return
+    }
+
+    const chatBox = document.getElementById("chat-box")
+    chatBox.innerHTML = ""
+
+    const h5 = document.getElementById("profile-name")
+    h5.innerHTML = target
+
+    createWebsocket(target)
+    activeChat = target
 }

@@ -1,29 +1,42 @@
+from sqlalchemy.orm import Session
+
 import models.chat.repository as chat_repo
-from multiprocessing import Process
+from models.chat.chat import PrivateMessage
+import models.session.repository as session_repo
 
-chats: dict[str, dict[str, list[str]]] = {}
+private_message_queue: dict[str, list[PrivateMessage]] = {}
 
-def handle_connection(ws, sender: str, target: str, repo: chat_repo.Repository):
+def private_chat(ws, sender: str, target: str, db_session: Session):
+    chat_repository = chat_repo.Repository(db_session)
+    session_repository = session_repo.Repository(db_session)
+
     while True:
-        data = ws.receive(timeout=2)
-        if data is not None:
-            repo.create_message(sender, target, data)
+        message = ws.receive(timeout=2)
+        if message is not None:
+            pm = PrivateMessage(sender, target, message)
+            chat_repository.create_message(pm)
 
-            if chats.get(sender + ":" + target) is None:
-                chats[sender + ":" + target] = {}
-            if chats.get(sender + ":" + target).get(target) is None:
-                chats[sender + ":" + target][target] = []
+            if private_message_queue.get(target) is None:
+                private_message_queue[target] = []
 
-            chats[sender + ":" + target][target].append(data)
+            private_message_queue[target].append(pm)
 
-        chat: dict[str, list[str]] = chats.get(sender + ":" + target)
-        if chat is None:
+            try:
+                session_repository.update_last_chat(sender, target)
+            except Exception as e:
+                print(e)
+
+            print(message)
+
+        chat = private_message_queue.get(sender)
+        if chat is None or len(chat) == 0:
             continue
 
-        data = chat.get(target)
-        if len(data) < 1:
-            continue
-
-        for message in data:
-            ws.send(message)
-            data.pop()
+        for i, message in enumerate(chat):
+            if message.sender == target:
+                try:
+                    ws.send(message.data)
+                    chat_repository.update_read(message.id, True)
+                    chat.pop(i)
+                except Exception as e:
+                    print(e)

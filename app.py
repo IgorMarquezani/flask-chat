@@ -9,13 +9,20 @@ from flask_sock import Sock
 from dotenv import load_dotenv
 
 import database.database as database
+
 import models.user.user as user
 import models.user.repository as user_repo
+
 import models.chat.chat as chat
 import models.chat.repository as chat_repo
+
+import models.session.session as user_session
+import models.session.repository as session_repo
+
 from form.signup import SignupForm
 from form.login import LoginForm
-from websocket.chat import handle_connection
+
+from websocket.chat import private_chat
 
 load_dotenv()
 
@@ -39,23 +46,42 @@ def login():
 
         u = repo.get_by_name(form.username)
         if u is None:
-            form.error = "user not found or invalid credentials"
+            form.error = "invalid credentials"
             return render_template('login/login.html', form=form)
 
-        if u.password == form.password:
-            session['username'] = u.username
-            return redirect('/home')
-        else:
-            form.error = "user not found or invalid credentials"
+        if u.password != form.password:
+            form.error = "invalid credentials"
             return render_template('login/login.html', form=form)
+
+        session['username'] = u.username
+
+        client_ip = request.remote_addr
+        if request.headers.get("X-Forwarded-For"):
+            client_ip = request.headers.get("X-Forwarded-For").split(",")[0]
+
+        us: user_session.Session = user_session.Session(
+            session.get('username'),
+            u.username,
+            client_ip
+        )
+
+        repo = session_repo.Repository(database.db.session)
+
+        try:
+            repo.create(us)
+        except sqlalchemy.exc.IntegrityError as e:
+            print(e)
+            return redirect('/home')
+
+        return redirect('/home')
     else:
         return render_template('login/login.html', form=form)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm(
-        request.form.get("username"),
-        request.form.get("email"),
+        request.form.get("username", ""),
+        request.form.get("email", ""),
         request.form.get("password")
     )
 
@@ -76,6 +102,24 @@ def signup():
 
         session['username'] = u.username
 
+        client_ip = request.remote_addr
+        if request.headers.get("X-Forwarded-For"):
+            client_ip = request.headers.get("X-Forwarded-For").split(",")[0]
+
+        us: user_session.Session = user_session.Session(
+            session.get('username'),
+            u.username,
+            client_ip
+        )
+
+        repo = session_repo.Repository(database.db.session)
+
+        try:
+            repo.create(us)
+        except sqlalchemy.exc.IntegrityError as e:
+            print(e)
+            return redirect("/home")
+
         return redirect('/home')
     else:
         return render_template('signup/signup.html', form=form)
@@ -83,12 +127,17 @@ def signup():
 @app.get('/home')
 def home():
     if 'username' in session:
-        repo = chat_repo.Repository(database.db.session)
-        chats = repo.select_user_chats(session.get("username"))
+        chat_repository = chat_repo.Repository(database.db.session)
 
-        data = {}
-        data['chats'] = chats
-        data['user'] = session['username']
+        data = {
+            'chats': chat_repository.select_user_chats(session.get("username")),
+            'user': session['username'],
+        }
+
+        session_repository = session_repo.Repository(database.db.session)
+
+        data['last_chat'] = session_repository.select_last_chat(session.get("username"))
+        data['last_chat_messages'] = chat_repository.select_chat_messages(session.get("username"), data['last_chat'])
 
         return render_template('home/home.html', data=data)
     else:
@@ -106,12 +155,6 @@ def chat_create(userone, usertwo):
 
 sock = Sock(app)
 
-@sock.route('/echo')
-def echo(ws):
-    while True:
-        data = ws.receive()
-        ws.send(data)
-
 @sock.route('/websocket/create')
 def chat(ws):
     if 'username' not in session:
@@ -121,7 +164,5 @@ def chat(ws):
     if target is None:
         return "No target provided", 400
 
-    repo = chat_repo.Repository(database.db.session)
-    sender = session.get('username')
-    handle_connection(ws, sender, target, repo)
+    private_chat(ws, session.get('username'), target, database.db.session)
     return "ok", 1000

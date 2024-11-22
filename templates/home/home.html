@@ -1,6 +1,6 @@
 {% extends "home/base.html" %}
 {% block content %}
-    <div class="container-fluid" >
+    <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
             <aside class="col-4 border-end">
@@ -14,8 +14,8 @@
                                 ☰
                             </button>
                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#start-chat-modal">Start Chat</a>
-                                <a class="dropdown-item" >Create group</a>
+                                <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#start-chat-modal">Start
+                                    Chat</a>
                                 <a class="dropdown-item" href="#">Logout</a>
                             </div>
                         </div>
@@ -24,36 +24,56 @@
 
                 <!-- Lista de Conversas -->
                 <div id="chats-list" class="list-group overflow-auto" style="height: calc(100vh - 56px);">
-            {% for chat in data.chats  %}
-                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat">
+
+                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat"
+                        onclick="changeMainChat('{{ data.user }}')">
                         <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">
                         <div class="flex-grow-1">
-                {% if chat.userone == data.user %}
-                <h5 class="mb-1">{{ chat.usertwo }}</h5>
-                {% else %}
-                <h5 class="mb-1">{{ chat.userone }}</h5>
-                {% endif %}
-                            <small>Você: Vamos amanhã?</small>
+                            <h5 class="mb-1">{{ data.user }} (yourself)</h5>
+                            <small>...</small>
                         </div>
-                        <small class="text-muted">Ontem</small>
+                        <small class="text-muted">...</small>
                     </a>
-            {% endfor %}
-                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat">
-                        <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">
-                        <div class="flex-grow-1">
-                            <h5 class="mb-1">Contato 1</h5>
-                            <small>Última mensagem recebida...</small>
-                        </div>
-                        <small class="text-muted">12:45</small>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat">
-                        <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">
-                        <div class="flex-grow-1">
-                            <h5 class="mb-1">Grupo de Amigos</h5>
-                            <small>Você: Vamos amanhã?</small>
-                        </div>
-                        <small class="text-muted">Ontem</small>
-                    </a>
+
+                    {% for chat in data.chats %}
+                        {% if chat.userone == data.user %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat"
+                               onclick="changeMainChat('{{ chat.usertwo }}')">
+                                <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">{{ chat.usertwo }}</h5>
+                                    <small>...</small>
+                                </div>
+                                <small class="text-muted">...</small>
+                            </a>
+                        {% else %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat"
+                               onclick="changeMainChat('{{ chat.userone }}')">
+                                <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">{{ chat.userone }}</h5>
+                                    <small>...</small>
+                                </div>
+                                <small class="text-muted">...</small>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                    {#                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat">#}
+                    {#                        <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">#}
+                    {#                        <div class="flex-grow-1">#}
+                    {#                            <h5 class="mb-1">Contato 1</h5>#}
+                    {#                            <small>Última mensagem recebida...</small>#}
+                    {#                        </div>#}
+                    {#                        <small class="text-muted">12:45</small>#}
+                    {#                    </a>#}
+                    {#                    <a href="#" class="list-group-item list-group-item-action d-flex align-items-center chat">#}
+                    {#                        <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">#}
+                    {#                        <div class="flex-grow-1">#}
+                    {#                            <h5 class="mb-1">Grupo de Amigos</h5>#}
+                    {#                            <small>Você: Vamos amanhã?</small>#}
+                    {#                        </div>#}
+                    {#                        <small class="text-muted">Ontem</small>#}
+                    {#                    </a>#}
                 </div>
             </aside>
 
@@ -64,8 +84,8 @@
                     <div class="d-flex align-items-center">
                         <img src="https://via.placeholder.com/50" alt="Profile" class="profile-pic me-3">
                         <div>
-                            <h5 class="mb-0">Contato 1</h5>
-                            <small>Online</small>
+                            <h5 id="profile-name" class="mb-0">{{ data.last_chat }}</h5>
+                            <small>...</small>
                         </div>
                     </div>
                     <div>
@@ -75,19 +95,25 @@
 
                 <!-- Mensagens -->
                 <div id="chat-box" class="chat-area d-flex flex-column p-3 h-75 overflow-scroll">
-                    <div class="message received align-self-start">
-                        <p class="mb-0">Olá! Tudo bem?</p>
-                        <small class="text-muted">12:30</small>
-                    </div>
-                    <div class="message sent align-self-end">
-                        <p class="mb-0">Oi! Tudo ótimo, e você?</p>
-                        <small class="text-muted">12:31</small>
-                    </div>
+                    {% for msg in data.last_chat_messages %}
+                    {% if msg.sender == data.user %}
+                        <div class="message sent align-self-end">
+                            <p class="mb-0">{{ msg.data }}</p>
+                            <small class="text-muted">{{ msg.time }}</small>
+                        </div>
+                    {% else %}
+                        <div class="message received align-self-start">
+                            <p class="mb-0">{{ msg.data }}</p>
+                            <small class="text-muted">{{ msg.time }}</small>
+                        </div>
+                    {% endif %}
+                {% endfor %}
                 </div>
 
                 <!-- Campo de Envio -->
-                <div class="d-flex align-items-center p-3 bg-light border-top">
-                    <input id="message-input" type="text" class="form-control me-2" placeholder="Digite uma mensagem...">
+                <div id="message-text-field" class="d-flex align-items-center p-3 bg-light border-top">
+                    <input id="message-input" type="text" class="form-control me-2"
+                           placeholder="Digite uma mensagem...">
                     <input id="send-message-btn" class="rounded btn btn-success w-25" value="Submit">
                 </div>
             </section>
@@ -106,7 +132,8 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <input id="start-chat-modal-input" class="form-control" type="text" placeholder="type the user name">
+                    <input id="start-chat-modal-input" class="form-control" type="text"
+                           placeholder="type the user name">
                     <p id="start-chat-error" class="text-danger"></p>
                     <p id="start-chat-message" class="text-success"></p>
                 </div>
