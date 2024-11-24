@@ -39,8 +39,8 @@ class Repository:
     def select_chat_messages(self, userone: str, usertwo: str) -> list[PrivateMessage]:
         stmt = select(PrivateMessage).where(
             or_(
-                PrivateMessage.sender == userone and PrivateMessage.target == usertwo ,
-                PrivateMessage.target == usertwo and PrivateMessage.sender == userone,
+                PrivateMessage.sender == userone and PrivateMessage.target == usertwo,
+                PrivateMessage.sender == usertwo and PrivateMessage.target == userone,
             )
         )
 

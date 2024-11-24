@@ -1,0 +1,13 @@
+{% for msg in data.messages %}
+{% if msg.sender == data.user %}
+    <div class="message sent align-self-end">
+        <p class="mb-0">{{ msg.data }}</p>
+        <small class="text-muted">{{ msg.time }}</small>
+    </div>
+{% else %}
+    <div class="message received align-self-start">
+        <p class="mb-0">{{ msg.data }}</p>
+        <small class="text-muted">{{ msg.time }}</small>
+    </div>
+{% endif %}
+{% endfor %}

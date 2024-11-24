@@ -78,6 +78,16 @@ const changeMainChat = (target) => {
     const chatBox = document.getElementById("chat-box")
     chatBox.innerHTML = ""
 
+    fetch(`/chat/private/messages/${target}`, {
+        method: 'GET',
+        cors: 'no-cors'
+    }).then((resp) => {
+        resp.text().then((txt) => {
+            chatBox.innerHTML = txt
+            chatBox.scrollTo(0, chatBox.scrollHeight)
+        })
+    })
+
     const h5 = document.getElementById("profile-name")
     h5.innerHTML = target
 

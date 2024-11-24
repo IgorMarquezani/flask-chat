@@ -137,11 +137,27 @@ def home():
         session_repository = session_repo.Repository(database.db.session)
 
         data['last_chat'] = session_repository.select_last_chat(session.get("username"))
-        data['last_chat_messages'] = chat_repository.select_chat_messages(session.get("username"), data['last_chat'])
+
+        if data['last_chat']:
+            data['last_chat_messages'] = chat_repository.select_chat_messages(session.get("username"), data['last_chat'])
 
         return render_template('home/home.html', data=data)
     else:
         return redirect('/login')
+
+@app.get('/chat/private/messages/<target>')
+def get_private_messages(target):
+    if 'username' not in session:
+        return 'not logged in', 401
+
+    chat_repository = chat_repo.Repository(database.db.session)
+
+    messages = chat_repository.select_chat_messages(session['username'], target)
+
+    data = {'user': session['username'], 'messages': messages}
+
+    return render_template("home/_messages.html", data=data)
+
 
 @app.post('/chat/create/<userone>/<usertwo>')
 def chat_create(userone, usertwo):

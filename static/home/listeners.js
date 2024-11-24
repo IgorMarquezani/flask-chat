@@ -21,6 +21,7 @@ const sendMessage = (e) => {
                         <small class="text-muted">${now.getHours()}</small>
         `
     chatBox.append(div)
+    chatBox.scrollTo(0, chatBox.scrollHeight)
 }
 
 document.getElementById("send-message-btn").addEventListener("click", sendMessage)

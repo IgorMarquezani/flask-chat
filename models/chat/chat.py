@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import Integer, String, Column, ForeignKey, Time, Boolean, func
 from database.database import db
 
